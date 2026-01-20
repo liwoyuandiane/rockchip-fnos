@@ -12,10 +12,17 @@ This project automatically builds and releases customized FnNAS images for vario
 
 ### Supported Devices
 
-- **NanoPi R2C**
-- **NanoPi R2S**
-- **OrangePi R1 Plus**
-- **OrangePi R1 Plus LTS**
+**Tested devices:**
+- **OrangePi R1 Plus LTS** ✅
+- **NanoPi R2S** ✅ (Uses Armbian's DTB, 20th compatibility not confirmed)
+
+**Note:** Images only support eMMC/SD storage.
+
+### Adaptation Principle
+
+For details on how the adaptation works, see: https://github.com/mingxiaoyu/rockchip-fnos/issues/2
+
+**Note:** Local packaging scripts are not provided. All builds are done through GitHub Actions.
 
 ### Features
 
@@ -25,44 +32,34 @@ This project automatically builds and releases customized FnNAS images for vario
 - 🔧 Build single device or all devices at once
 - 📤 Automatic release with compressed images
 
-### Usage
-
-#### Trigger a Build
-
-1. Go to the **Actions** tab in your GitHub repository
-2. Select **Build and Release FnNAS** workflow
-3. Click **Run workflow**
-4. Configure options:
-   - **DEVICE**: Leave empty to build all devices, or specify one device name (e.g., `Nanopi-r2c`)
-   - **ROOT_SIZE**: Root filesystem size in GiB (default: 6)
-
-#### Build All Devices
-
-Leave the `DEVICE` field empty when triggering the workflow.
-
-#### Build Specific Device
-
-Enter the device folder name exactly as it appears in the `uboot/` directory:
-- `Nanopi-r2c`
-- `Nanopi-r2s`
-- `Orangepi-r1plus`
-- `Orangepi-r1plus-lts`
-
 ### Directory Structure
 
 ```
-fnos/
-├── uboot/                    # Device-specific U-Boot configurations
-│   ├── Nanopi-r2c/
-│   │   └── fnEnv.txt
-│   ├── Nanopi-r2s/
-│   │   └── fnEnv.txt
-│   ├── Orangepi-r1plus/
-│   │   └── fnEnv.txt
-│   └── Orangepi-r1plus-lts/
-│       └── fnEnv.txt
-└── workflows/
-    └── build-fnos.yml        # GitHub Actions workflow
+uboot/
+├── rk3328/                   # RK3328 chip devices
+│   ├── nanopi-r2c/
+│   ├── nanopi-r2s/
+│   ├── orangepi-r1plus/
+│   └── orangepi-r1plus-lts/
+├── rk3399/                   # RK3399 chip devices
+│   ├── orangepi4-lts/
+│   ├── pinebook-pro/
+│   ├── rockpi-4a/
+│   ├── rockpi-4b/
+│   └── ...
+├── rk3566/                   # RK3566 chip devices
+├── rk3568/                   # RK3568 chip devices
+│   ├── nanopi-r5s/
+│   └── odroidm1/
+├── rk3576/                   # RK3576 chip devices
+├── rk3588/                   # RK3588 chip devices
+└── rk3588s/                  # RK3588S chip devices
+
+Each device folder contains:
+- extlinux.conf               # Boot configuration
+- fnEnv.txt                   # Environment variables
+- *.dtb                       # Device tree blob
+- u-boot.itb                  # U-Boot image (for some devices)
 ```
 
 ### Releases
@@ -83,10 +80,17 @@ Each release contains:
 
 ### 支持的设备
 
-- **NanoPi R2C**
-- **NanoPi R2S**
-- **OrangePi R1 Plus**
-- **OrangePi R1 Plus LTS**
+**已测试设备：**
+- **OrangePi R1 Plus LTS** ✅
+- **NanoPi R2S** ✅（使用 Armbian 的 DTB，20日兼容性未确认）
+
+**注意：** 镜像仅支持 eMMC/SD 存储。
+
+### 适配原理
+
+关于适配原理的详细信息，请参见：https://github.com/mingxiaoyu/rockchip-fnos/issues/2
+
+**注意：** 本项目不提供本地打包脚本，所有构建均通过 GitHub Actions 完成。
 
 ### 功能特性
 
@@ -96,44 +100,34 @@ Each release contains:
 - 🔧 可构建单个设备或所有设备
 - 📤 自动发布压缩镜像
 
-### 使用方法
-
-#### 触发构建
-
-1. 进入 GitHub 仓库的 **Actions** 标签页
-2. 选择 **Build and Release FnNAS** 工作流
-3. 点击 **Run workflow**
-4. 配置选项：
-   - **DEVICE**：留空构建所有设备，或指定单个设备名称（例如：`Nanopi-r2c`）
-   - **ROOT_SIZE**：根文件系统大小，单位 GiB（默认：6）
-
-#### 构建所有设备
-
-触发工作流时将 `DEVICE` 字段留空即可。
-
-#### 构建特定设备
-
-输入 `uboot/` 目录中显示的确切设备文件夹名称：
-- `Nanopi-r2c`
-- `Nanopi-r2s`
-- `Orangepi-r1plus`
-- `Orangepi-r1plus-lts`
-
 ### 目录结构
 
 ```
-fnos/
-├── uboot/                    # 设备特定的 U-Boot 配置
-│   ├── Nanopi-r2c/
-│   │   └── fnEnv.txt
-│   ├── Nanopi-r2s/
-│   │   └── fnEnv.txt
-│   ├── Orangepi-r1plus/
-│   │   └── fnEnv.txt
-│   └── Orangepi-r1plus-lts/
-│       └── fnEnv.txt
-└── workflows/
-    └── build-fnos.yml        # GitHub Actions 工作流
+uboot/
+├── rk3328/                   # RK3328 芯片设备
+│   ├── nanopi-r2c/
+│   ├── nanopi-r2s/
+│   ├── orangepi-r1plus/
+│   └── orangepi-r1plus-lts/
+├── rk3399/                   # RK3399 芯片设备
+│   ├── orangepi4-lts/
+│   ├── pinebook-pro/
+│   ├── rockpi-4a/
+│   ├── rockpi-4b/
+│   └── ...
+├── rk3566/                   # RK3566 芯片设备
+├── rk3568/                   # RK3568 芯片设备
+│   ├── nanopi-r5s/
+│   └── odroidm1/
+├── rk3576/                   # RK3576 芯片设备
+├── rk3588/                   # RK3588 芯片设备
+└── rk3588s/                  # RK3588S 芯片设备
+
+每个设备文件夹包含：
+- extlinux.conf               # 启动配置
+- fnEnv.txt                   # 环境变量
+- *.dtb                       # 设备树文件
+- u-boot.itb                  # U-Boot 镜像（部分设备）
 ```
 
 ### 发布版本
