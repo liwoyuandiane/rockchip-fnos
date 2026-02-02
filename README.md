@@ -14,7 +14,7 @@ This project automatically builds and releases customized FnNAS images for vario
 
 **Tested devices:**
 - **OrangePi R1 Plus LTS** ✅
-- **NanoPi R2S** ✅ (Uses Armbian's DTB, 20th compatibility not confirmed)
+- **NanoPi R2S** ✅ 
 
 **Note:** Images only support eMMC/SD storage.
 
@@ -82,7 +82,7 @@ Each release contains:
 
 **已测试设备：**
 - **OrangePi R1 Plus LTS** ✅
-- **NanoPi R2S** ✅（使用 Armbian 的 DTB，20日兼容性未确认）
+- **NanoPi R2S** ✅
 
 **注意：** 镜像仅支持 eMMC/SD 存储。
 
@@ -137,4 +137,5 @@ uboot/
 每个发布版本包含：
 - 每个设备的压缩 `.img.xz` 文件
 - 构建信息，包括根文件系统大小和支持的设备
+
 
