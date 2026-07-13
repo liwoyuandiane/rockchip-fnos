@@ -22,7 +22,22 @@ This project automatically builds and releases customized FnNAS images for vario
 
 For details on how the adaptation works, see: https://github.com/mingxiaoyu/rockchip-fnos/issues/2
 
-**Note:** Local packaging scripts are not provided. All builds are done through GitHub Actions.
+### Local Build
+
+You can also build images locally using the `buildfnos.sh` script:
+
+```bash
+# Build for a specific device
+DEVICE=Orangepi-r1plus-lts ./buildfnos.sh
+
+# Optionally specify rootfs size (default: 6 GiB)
+ROOT_SIZE=8 DEVICE=Orangepi-r1plus-lts ./buildfnos.sh
+
+# Optionally force boot group (A or B, default: auto)
+BOOT_GROUP=A DEVICE=Orangepi-r1plus-lts ./buildfnos.sh
+```
+
+The script requires `sudo` for `dd` and `mount` operations. Output images are saved to the `out/` directory.
 
 ### Features
 
@@ -35,6 +50,7 @@ For details on how the adaptation works, see: https://github.com/mingxiaoyu/rock
 ### Directory Structure
 
 ```
+buildfnos.sh                  # Local image build script
 uboot/
 ├── rk3328/                   # RK3328 chip devices
 │   ├── nanopi-r2c/
@@ -90,7 +106,22 @@ Each release contains:
 
 关于适配原理的详细信息，请参见：https://github.com/mingxiaoyu/rockchip-fnos/issues/2
 
-**注意：** 本项目不提供本地打包脚本，所有构建均通过 GitHub Actions 完成。
+### 本地构建
+
+也可以使用 `buildfnos.sh` 脚本在本地构建镜像：
+
+```bash
+# 构建指定设备的镜像
+DEVICE=Orangepi-r1plus-lts ./buildfnos.sh
+
+# 可选：指定根文件系统大小（默认 6 GiB）
+ROOT_SIZE=8 DEVICE=Orangepi-r1plus-lts ./buildfnos.sh
+
+# 可选：指定启动格式组（A 或 B，默认自动检测）
+BOOT_GROUP=A DEVICE=Orangepi-r1plus-lts ./buildfnos.sh
+```
+
+脚本需要 `sudo` 权限用于 `dd` 和 `mount` 操作。输出镜像保存在 `out/` 目录。
 
 ### 功能特性
 
@@ -103,6 +134,7 @@ Each release contains:
 ### 目录结构
 
 ```
+buildfnos.sh                  # 本地镜像构建脚本
 uboot/
 ├── rk3328/                   # RK3328 芯片设备
 │   ├── nanopi-r2c/
