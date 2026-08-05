@@ -39,6 +39,36 @@ BOOT_GROUP=A DEVICE=Orangepi-r1plus-lts ./buildfnos.sh
 
 The script requires `sudo` for `dd` and `mount` operations. Output images are saved to the `out/` directory.
 
+### Build via GitHub Actions
+
+Trigger the `Build and Release FnNAS` workflow manually. Available inputs:
+
+- **DEVICE** (optional): build a single device (e.g. `rockpi-4a`), or leave empty to build all `uboot/*/*` devices.
+- **ROOT_SIZE** (optional, default `6`): rootfs expansion size in GiB.
+- **BASE_IMAGE_URL** (optional): custom fnNAS base image download link. Supports `.img`, `.img.gz`, `.img.xz`. Leave empty to use the default latest Rockchip image from `ophub/fnnas`.
+- **BASE_IMAGE_FILENAME** (optional): local filename to save the custom base image with (must end in `.img`, `.img.gz` or `.img.xz`). Useful when the URL has no recognizable filename or a wrong suffix. Only takes effect when `BASE_IMAGE_URL` is set.
+
+Rules for the two base image inputs:
+
+- **URL set, filename empty**: filename is derived from the URL. If no name can be derived, or the suffix is not recognized, the build fails with a clear error message.
+- **Filename set, URL empty**: both inputs are ignored, the default `ophub/fnnas` logic is used.
+- **Both empty**: default `ophub/fnnas` logic.
+
+Example: build `rockpi-4a` with a custom NanoPC T4 base image:
+
+```
+DEVICE: rockpi-4a
+BASE_IMAGE_URL: https://example.com/fnos_Mainland-PE_arm_1.2.0302_nanopc-t4_2288.img.gz
+```
+
+Example: the URL has no suffix, so name the file manually:
+
+```
+DEVICE: rockpi-4a
+BASE_IMAGE_URL: https://example.com/download?id=2288
+BASE_IMAGE_FILENAME: fnos_nanopc-t4_2288.img.gz
+```
+
 ### Features
 
 - 🚀 Automated builds using GitHub Actions
@@ -122,6 +152,36 @@ BOOT_GROUP=A DEVICE=Orangepi-r1plus-lts ./buildfnos.sh
 ```
 
 脚本需要 `sudo` 权限用于 `dd` 和 `mount` 操作。输出镜像保存在 `out/` 目录。
+
+### 通过 GitHub Actions 构建
+
+手动触发 `Build and Release FnNAS` 工作流，可用的输入项：
+
+- **DEVICE**（可选）：构建指定设备（如 `rockpi-4a`），留空则构建所有 `uboot/*/*` 设备。
+- **ROOT_SIZE**（可选，默认 `6`）：rootfs 扩容大小（GiB）。
+- **BASE_IMAGE_URL**（可选）：自定义 fnNAS 基础包下载链接，支持 `.img`、`.img.gz`、`.img.xz` 后缀；留空则使用 `ophub/fnnas` 默认最新的 Rockchip 镜像。
+- **BASE_IMAGE_FILENAME**（可选）：自定义基础包下载后的本地文件名（须以 `.img`、`.img.gz` 或 `.img.xz` 结尾），用于链接本身无文件名或后缀错误时；仅当填写了 `BASE_IMAGE_URL` 时生效。
+
+两个基础包输入项的规则：
+
+- **填了链接、名字留空**：从链接自动取文件名。若取不到名字，或后缀无法识别，构建将失败并给出明确错误原因。
+- **填了名字、链接留空**：忽略这两个参数，使用默认 `ophub/fnnas` 逻辑。
+- **两者都留空**：使用默认 `ophub/fnnas` 逻辑。
+
+示例：使用自定义的 NanoPC T4 基础包构建 `rockpi-4a`：
+
+```
+DEVICE: rockpi-4a
+BASE_IMAGE_URL: https://example.com/fnos_Mainland-PE_arm_1.2.0302_nanopc-t4_2288.img.gz
+```
+
+示例：链接本身没有后缀，手动指定文件名：
+
+```
+DEVICE: rockpi-4a
+BASE_IMAGE_URL: https://example.com/download?id=2288
+BASE_IMAGE_FILENAME: fnos_nanopc-t4_2288.img.gz
+```
 
 ### 功能特性
 

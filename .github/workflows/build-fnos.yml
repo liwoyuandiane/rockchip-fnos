@@ -11,6 +11,14 @@ on:
         description: "rootfs 扩容大小（GiB，默认 6）"
         required: false
         default: "6"
+      BASE_IMAGE_URL:
+        description: "自定义 fnNAS 基础包下载链接（支持 .img / .img.gz / .img.xz），留空则使用默认最新 Rockchip 镜像"
+        required: false
+        default: ""
+      BASE_IMAGE_FILENAME:
+        description: "自定义基础包下载后的本地文件名（需带 .img / .img.gz / .img.xz 后缀），用于链接本身无后缀或后缀错误时；留空则自动从链接取名。仅当 BASE_IMAGE_URL 填写时生效"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -84,25 +92,65 @@ jobs:
         id: download
         run: |
           set -e
-          REPO="ophub/fnnas"
-          TAG="fnnas_base_image"
-          API_URL="https://api.github.com/repos/$REPO/releases/tags/$TAG"
-          RESPONSE=$(curl -sL "$API_URL")
-          ASSET_URL=$(echo "$RESPONSE" | jq -r '
-            .assets[] | select(.name | test("rockchip") and endswith(".img.xz")) | .browser_download_url
-          ' | sort -V | tail -n 1)
-          if [ -z "$ASSET_URL" ] || [ "$ASSET_URL" = "null" ]; then
-            echo "❌ No Rockchip .img.xz asset found"
-            exit 1
+          CUSTOM_URL="${{ github.event.inputs.BASE_IMAGE_URL }}"
+          CUSTOM_NAME="${{ github.event.inputs.BASE_IMAGE_FILENAME }}"
+          if [ -z "$CUSTOM_URL" ]; then
+            REPO="ophub/fnnas"
+            TAG="fnnas_base_image"
+            API_URL="https://api.github.com/repos/$REPO/releases/tags/$TAG"
+            RESPONSE=$(curl -sL "$API_URL")
+            ASSET_URL=$(echo "$RESPONSE" | jq -r '
+              .assets[] | select(.name | test("rockchip") and endswith(".img.xz")) | .browser_download_url
+            ' | sort -V | tail -n 1)
+            if [ -z "$ASSET_URL" ] || [ "$ASSET_URL" = "null" ]; then
+              echo "❌ No Rockchip .img.xz asset found"
+              exit 1
+            fi
+            FILENAME=$(basename "$ASSET_URL")
+            curl -L -o "$FILENAME" "$ASSET_URL"
+          else
+            if [ -n "$CUSTOM_NAME" ]; then
+              FILENAME="$CUSTOM_NAME"
+            else
+              FILENAME=$(basename "$CUSTOM_URL" | cut -d'?' -f1)
+              if [ -z "$FILENAME" ]; then
+                echo "❌ 无法从链接中获取文件名，请在 BASE_IMAGE_FILENAME 中手动指定"
+                exit 1
+              fi
+            fi
+            case "$FILENAME" in
+              *.img|*.img.gz|*.img.xz)
+                ;;
+              *)
+                echo "❌ 镜像文件名后缀无法识别: '$FILENAME'（支持 .img / .img.gz / .img.xz）"
+                echo "   请在 BASE_IMAGE_FILENAME 中手动指定带正确后缀的文件名"
+                exit 1
+                ;;
+            esac
+            curl -L -o "$FILENAME" "$CUSTOM_URL"
           fi
-          FILENAME=$(basename "$ASSET_URL")
-          curl -L -o "$FILENAME" "$ASSET_URL"
           echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
       - name: Decompress base image
         run: |
+          set -e
           mkdir -p fnnas-arm64
-          xz -d -c "${{ steps.download.outputs.filename }}" > fnnas-arm64/fnnas-arm64.img
+          FILENAME="${{ steps.download.outputs.filename }}"
+          case "$FILENAME" in
+            *.img.xz)
+              xz -d -c "$FILENAME" > fnnas-arm64/fnnas-arm64.img
+              ;;
+            *.img.gz)
+              gzip -d -c "$FILENAME" > fnnas-arm64/fnnas-arm64.img
+              ;;
+            *.img)
+              cp "$FILENAME" fnnas-arm64/fnnas-arm64.img
+              ;;
+            *)
+              echo "❌ 不支持的镜像后缀: $FILENAME (仅支持 .img / .img.gz / .img.xz)"
+              exit 1
+              ;;
+          esac
 
       - name: Build device image
         id: build
@@ -138,8 +186,10 @@ jobs:
           body: |
             🎉 基于 FNOS ARM 镜像二次打包
             根目录默认大小: ${{ github.event.inputs.ROOT_SIZE }} GiB
+            基础包来源: ${{ github.event.inputs.BASE_IMAGE_URL != '' && '自定义链接' || 'ophub/fnnas 默认最新 Rockchip 镜像' }}
             支持设备: ${{ needs.prepare.outputs.all_devices }}
           
             🎉 FNOS ARM re-packaged image
             Default root size: ${{ github.event.inputs.ROOT_SIZE }} GiB
+            Base image source: ${{ github.event.inputs.BASE_IMAGE_URL != '' && 'Custom URL' || 'ophub/fnnas default latest Rockchip image' }}
             Supported devices: ${{ needs.prepare.outputs.all_devices }}
