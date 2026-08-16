@@ -1,0 +1,13 @@
+# 构建产物
+out/
+out-compressed/
+fnnas-arm64/
+build-logs/
+*.img
+*.img.xz
+*.img.gz
+
+# 系统/编辑器文件
+.DS_Store
+*.swp
+*~

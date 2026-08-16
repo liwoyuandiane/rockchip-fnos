@@ -1,0 +1,30 @@
+name: Validate Devices & Scripts
+
+# 在 push 和 pull request 时校验仓库完整性，防止错误的设备目录/脚本合入。
+# 主要覆盖: 设备目录文件齐全、引导组正确、DTB 引用一致、无重名、bash 语法、shellcheck 规范。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate device directories and scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Validate device directories
+        run: bash scripts/check-devices.sh
+
+      - name: ShellCheck buildfnos.sh
+        run: shellcheck -S warning buildfnos.sh
+
+      - name: ShellCheck check-devices.sh
+        run: shellcheck -S warning scripts/check-devices.sh

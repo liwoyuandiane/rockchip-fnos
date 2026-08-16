@@ -16,6 +16,10 @@ UBOOT_BASE="uboot"
 UBOOT_PATH=""
 
 ROOT_SIZE="${ROOT_SIZE:-6}"   # GiB（默认 6）
+if ! [[ "$ROOT_SIZE" =~ ^[1-9][0-9]*$ ]]; then
+  echo "❌ ROOT_SIZE 必须是正整数（如 6、8、16），收到: '$ROOT_SIZE'"
+  exit 1
+fi
 
 ROOT_MOUNT="/mnt/fnnas_root"
 BOOT_MOUNT="/mnt/fnnas_boot"
@@ -113,7 +117,9 @@ sudo mkdir -p "$BOOT_MOUNT" "$ROOT_MOUNT" || { echo "❌ 创建挂载目录失�
 cleanup() {
   sudo umount "$BOOT_MOUNT" 2>/dev/null || true
   sudo umount "$ROOT_MOUNT" 2>/dev/null || true
-  [[ -n "${LOOP_DEVICE:-}" ]] && sudo losetup -d "$LOOP_DEVICE" 2>/dev/null || true
+  if [[ -n "${LOOP_DEVICE:-}" ]]; then
+    sudo losetup -d "$LOOP_DEVICE" 2>/dev/null || true
+  fi
 }
 trap cleanup EXIT
 
@@ -167,13 +173,53 @@ ROOT_PART="${LOOP_DEVICE}p2"
 
 sudo mount "$ROOT_PART" "$ROOT_MOUNT" || { echo "❌ 挂载 root 分区失败"; exit 1; }
 
-# 处理 resize-rootfs.sh
+# 处理 rootfs 扩容大小。
+# 不同来源的镜像扩容配置格式不同，需全部兼容并输出明确诊断：
+#   1) 官方镜像内置脚本:  usr/trim/bin/resize-rootfs.sh → target_partition_gb=<n>
+#   2) ophub/fnnas 新格式: etc/fnnas.conf → rootfs_limit_gib="<n>"
+# 注意: 老版本 buildfnos.sh 用 sed "s/64/.../g" 是空转的——官方脚本里根本没有独立的 64，
+#       真实格式是 target_disk_size_gb=32 / target_partition_gb=28。
+# 替换时整段重写匹配文本，避免 backref 后接数字的歧义（\1 + 8 会被 sed 解析成捕获组 18）。
+apply_root_size() {
+  local file="$1" pattern="$2" new_text="$3" label="$4"
+  local count
+  count=$(sudo grep -cE "$pattern" "$file" 2>/dev/null || true)
+  if [[ "$count" -gt 0 ]]; then
+    sudo sed -i -E "s/$pattern/$new_text/g" "$file" || { echo "❌ 修改 $label 失败"; exit 1; }
+    echo "✅ $label → ${ROOT_SIZE}GiB (改写 $count 处)"
+    return 0
+  fi
+  return 1
+}
+
 RESIZE_ROOTFS_PATH="$ROOT_MOUNT/usr/trim/bin/resize-rootfs.sh"
+FNNAS_CONF_PATH="$ROOT_MOUNT/etc/fnnas.conf"
+
+echo "✏️ 设置 rootfs 扩容大小: ${ROOT_SIZE}GiB"
+applied=0
+
 if [[ -f "$RESIZE_ROOTFS_PATH" ]]; then
-  echo "✏️ 修改 resize-rootfs.sh (目标大小: ${ROOT_SIZE}GiB)"
-  sudo sed -i "s/64/$ROOT_SIZE/g" "$RESIZE_ROOTFS_PATH" || { echo "❌ 修改 resize-rootfs.sh 失败"; exit 1; }
+  apply_root_size "$RESIZE_ROOTFS_PATH" \
+    'target_partition_gb=[0-9]+' \
+    "target_partition_gb=$ROOT_SIZE" \
+    "resize-rootfs.sh (target_partition_gb)" \
+    && applied=1
+fi
+
+if [[ -f "$FNNAS_CONF_PATH" ]]; then
+  apply_root_size "$FNNAS_CONF_PATH" \
+    'rootfs_limit_gib="[0-9]+"' \
+    "rootfs_limit_gib=\"$ROOT_SIZE\"" \
+    "fnnas.conf (rootfs_limit_gib)" \
+    && applied=1
+fi
+
+if [[ "$applied" -eq 0 ]]; then
+  echo "⚠️ 未匹配到任何已知的 rootfs 扩容配置，ROOT_SIZE=${ROOT_SIZE}GiB 未生效！"
+  echo "   支持的格式: resize-rootfs.sh 的 target_partition_gb，或 fnnas.conf 的 rootfs_limit_gib"
+  echo "   请检查基础镜像中的扩容脚本格式，必要时更新 buildfnos.sh。"
 else
-  echo "⚠️ 未找到 resize-rootfs.sh"
+  echo "✅ rootfs 扩容大小设置完成: ${ROOT_SIZE}GiB"
 fi
 
 sudo umount "$ROOT_MOUNT" || { echo "❌ 卸载 root 分区失败"; exit 1; }

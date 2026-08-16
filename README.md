@@ -39,6 +39,8 @@ BOOT_GROUP=A DEVICE=Orangepi-r1plus-lts ./buildfnos.sh
 
 The script requires `sudo` for `dd` and `mount` operations. Output images are saved to the `out/` directory.
 
+> **Note on `ROOT_SIZE`:** it is applied to the image's rootfs resize config — `resize-rootfs.sh`'s `target_partition_gb=` on official fnOS images, or `etc/fnnas.conf`'s `rootfs_limit_gib=` on ophub/fnnas images. Most official images have no standalone `64` in the resize script, so the old blind `sed s/64/.../` never actually took effect; the current script rewrites the real config key and prints a warning if no known format is found. Illegal values (non-positive integers) now abort the build.
+
 ### Build via GitHub Actions
 
 Trigger the `Build and Release FnNAS` workflow manually. Available inputs:
@@ -76,11 +78,13 @@ BASE_IMAGE_FILENAME: fnos_nanopc-t4_2288.img.gz
 - 💾 Customizable rootfs size
 - 🔧 Build single device or all devices at once
 - 📤 Automatic release with compressed images
+- 🛡️ CI validation of device directories and scripts (via `scripts/check-devices.sh`)
 
 ### Directory Structure
 
 ```
 buildfnos.sh                  # Local image build script
+scripts/check-devices.sh      # Local device directory validation (also used by CI)
 uboot/
 ├── rk3328/                   # RK3328 chip devices
 │   ├── nanopi-r2c/
@@ -153,6 +157,8 @@ BOOT_GROUP=A DEVICE=Orangepi-r1plus-lts ./buildfnos.sh
 
 脚本需要 `sudo` 权限用于 `dd` 和 `mount` 操作。输出镜像保存在 `out/` 目录。
 
+> **`ROOT_SIZE` 说明：** 该参数会写入镜像的扩容配置——官方 fnOS 镜像为 `resize-rootfs.sh` 的 `target_partition_gb=`，ophub/fnnas 镜像为 `etc/fnnas.conf` 的 `rootfs_limit_gib=`。多数官方镜像的扩容脚本中没有独立的 `64`，因此旧的 `sed s/64/.../` 全局替换实际上从未生效；当前脚本会改写真实的配置项，若未发现任何已知格式会给出警告。非法值（非正整数）会中止构建。
+
 ### 通过 GitHub Actions 构建
 
 手动触发 `Build and Release FnNAS` 工作流，可用的输入项：
@@ -190,11 +196,13 @@ BASE_IMAGE_FILENAME: fnos_nanopc-t4_2288.img.gz
 - 💾 可自定义的根文件系统大小
 - 🔧 可构建单个设备或所有设备
 - 📤 自动发布压缩镜像
+- 🛡️ CI 校验设备目录与脚本（通过 `scripts/check-devices.sh`）
 
 ### 目录结构
 
 ```
 buildfnos.sh                  # 本地镜像构建脚本
+scripts/check-devices.sh      # 本地设备目录校验（CI 也复用）
 uboot/
 ├── rk3328/                   # RK3328 芯片设备
 │   ├── nanopi-r2c/
