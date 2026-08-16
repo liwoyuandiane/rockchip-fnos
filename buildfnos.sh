@@ -2,6 +2,7 @@
 # FNNAS 镜像自动修改与打包脚本（CI / GitHub Actions 专用）
 
 set -euo pipefail
+shopt -s nullglob
 
 echo "========================================"
 echo "FNNAS 镜像自动修改与打包脚本 (CI版)"
@@ -30,7 +31,6 @@ SOC_MATCHES=()
 DEVICE_LC=$(printf '%s' "$DEVICE" | tr '[:upper:]' '[:lower:]')
 for soc_dir in "$UBOOT_BASE"/*; do
   [[ -d "$soc_dir" ]] || continue
-  shopt -s nullglob
   for dev_dir in "$soc_dir"/*; do
     [[ -d "$dev_dir" ]] || continue
     dev_base=$(basename "$dev_dir")
@@ -63,7 +63,6 @@ cp "$ORIGINAL_IMG" "$MODIFIED_IMG" || { echo "❌ 复制镜像失败"; exit 1; }
 
 echo
 echo "1️⃣ 校验设备目录: $DEVICE"
-shopt -s nullglob
 [[ -f "$UBOOT_PATH/fnEnv.txt" ]] || { echo "❌ 缺少 $UBOOT_PATH/fnEnv.txt"; exit 1; }
 
 has_group_a=0
@@ -152,7 +151,6 @@ else
 fi
 
 # 如果 boot 分区中不存在 dtb 文件，则从 uboot 路径复制到 dtb/rockchip（仅复制一个 dtb）
-shopt -s nullglob
 DTB_FILES=("$UBOOT_PATH"/*.dtb)
 if [[ -e "${DTB_FILES[0]}" ]]; then
   DTB_TARGET_DIR="$BOOT_MOUNT/dtb/rockchip"

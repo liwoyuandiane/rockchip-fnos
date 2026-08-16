@@ -54,13 +54,12 @@ echo "=========================================="
 echo "检查 4/5: 各设备目录必需文件"
 echo "=========================================="
 for d in "${DEVICES[@]}"; do
-  dev="$d"
   name=$(basename "$d")
   # fnEnv.txt 必需
-  if [[ ! -f "$dev/fnEnv.txt" ]]; then err "$name: 缺少 fnEnv.txt"; fi
+  if [[ ! -f "$d/fnEnv.txt" ]]; then err "$name: 缺少 fnEnv.txt"; fi
 
   # DTB 至少一个
-  dtb=$(find "$dev" -maxdepth 1 -name '*.dtb' 2>/dev/null | head -1)
+  dtb=$(find "$d" -maxdepth 1 -name '*.dtb' 2>/dev/null | head -1)
   if [[ -z "$dtb" ]]; then
     err "$name: 缺少 *.dtb"
   else
@@ -69,8 +68,8 @@ for d in "${DEVICES[@]}"; do
 
   # 引导文件: 必须恰好是 A 组或 B 组之一（不允许两组都全/都不全）
   has_a=0; has_b=0
-  { [[ -f "$dev/idbloader.img" ]] && [[ -f "$dev/u-boot.itb" ]]; } && has_a=1
-  { [[ -f "$dev/idbloader.bin" ]] && [[ -f "$dev/uboot.img" ]] && [[ -f "$dev/trust.bin" ]]; } && has_b=1
+  { [[ -f "$d/idbloader.img" ]] && [[ -f "$d/u-boot.itb" ]]; } && has_a=1
+  { [[ -f "$d/idbloader.bin" ]] && [[ -f "$d/uboot.img" ]] && [[ -f "$d/trust.bin" ]]; } && has_b=1
   if [[ $((has_a + has_b)) -eq 0 ]]; then
     err "$name: 缺少完整的引导文件组 A(idbloader.img+u-boot.itb) 或 B(idbloader.bin+uboot.img+trust.bin)"
   elif [[ $((has_a + has_b)) -eq 2 ]]; then
@@ -78,7 +77,7 @@ for d in "${DEVICES[@]}"; do
   fi
 
   # extlinux.conf 可选但若存在需可读
-  if [[ -f "$dev/extlinux.conf" ]] && [[ ! -r "$dev/extlinux.conf" ]]; then
+  if [[ -f "$d/extlinux.conf" ]] && [[ ! -r "$d/extlinux.conf" ]]; then
     err "$name: extlinux.conf 不可读"
   fi
 done
